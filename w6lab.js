@@ -44,7 +44,8 @@ app.get('/',function(req,res){
 app.post('/addtask', function (req,res){
     console.log(req.body);
     let taskID = getNewRandomId();
-    db.collection('tasks').insertOne({taskId: taskID, taskName:req.body.taskName, assignTo:req.body.assignTo, taskDueDate: req.body.taskDueDate, 
+    let date = new Date (req.body.taskDueDate);
+    db.collection('tasks').insertOne({taskId: taskID, taskName:req.body.taskName, assignTo:req.body.assignTo, taskDueDate:date, 
         taskStatus: req.body.taskStatus, taskDescription: req.body.taskDescription});
     res.redirect('/listtasks');
 });
@@ -94,6 +95,12 @@ app.post('/updatebyid', function (req,res){
     let filter = { taskId: id };
     let theUpdate = { $set: { taskStatus: req.body.newTaskStatus } };
     db.collection('tasks').updateOne(filter, theUpdate);
+    res.redirect('/listtasks');
+});
+//delete all tasks that are marked complete and their due date is already passed
+app.get('/deleteoldcomplete', function(req, res){
+    let date = new Date();
+    db.collection('tasks').deleteMany({$and:[{taskStatus:'Complete'}, {taskDueDate: {$lt: date}}]});
     res.redirect('/listtasks');
 });
 
